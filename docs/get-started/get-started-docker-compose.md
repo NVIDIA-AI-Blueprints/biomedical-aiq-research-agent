@@ -273,7 +273,7 @@ Troubleshooting tips if the default collection creation fails:
 
 ### Use the Biomedical AI-Q Research Agent
 
-Follow the instructions in the [demo walkthrough](https://github.com/NVIDIA-AI-Blueprints/biomedical-aiq-research-agent/demo/README.md) to explore the Biomedical AI-Q Research Agent.
+Follow the instructions in the [demo walkthrough](https://github.com/NVIDIA-AI-Blueprints/biomedical-aiq-research-agent/blob/main/demo/README.md) to explore the Biomedical AI-Q Research Agent.
 
 ### Stopping all services
 
