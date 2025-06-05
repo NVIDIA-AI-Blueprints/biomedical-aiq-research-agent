@@ -135,4 +135,3 @@ This project will download and install additional third-party open source softwa
 - The end users are responsible for building the container images and keeping them up to date.
 - The end users are responsible for ensuring that OSS packages used by the developer blueprint are current.
 - The logs from nginx proxy, backend, and demo app are printed to standard out. They can include input prompts and output completions for development purposes. The end users are advised to handle logging securely and avoid information leakage for production use cases.
-- The Biomedical AI-Q Research Agent Developer Blueprint calls to the RCSB PDB API and the PubChemPy API for searching the target protein ID and SMILES strings for molecules, and downloads the PDB file for the target protein ID from the RCSB PDB API.
