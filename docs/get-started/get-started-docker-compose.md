@@ -293,7 +293,8 @@ docker compose -f deploy/compose/docker-compose.yaml --profile deploy-bionemo-ni
 docker compose -f deploy/compose/docker-compose.yaml --profile aira-instruct-llm down
 ```
 
-4. Stop the RAG services:
+4. Stop the RAG services. (Ensure you still have the variable `NGC_API_KEY` exported)
+:
 ```bash
 docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down
 docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down
@@ -301,9 +302,9 @@ docker compose -f rag/deploy/compose/vectordb.yaml down
 docker compose -f rag/deploy/compose/nims.yaml down
 ```
 
-5. Remove the cache directories used by the RAG vector database and minio service:
+5. Remove the cache directories used by the RAG vector database:
 ```bash
-rm -rf rag/deploy/compose/volumes/minio
+sudo rm -rf rag/deploy/compose/volumes
 ```
 
 Tip: If you retain these directories, the collections you created will remain the next time you start the services.
