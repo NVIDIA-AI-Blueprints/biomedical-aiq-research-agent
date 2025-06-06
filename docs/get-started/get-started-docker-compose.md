@@ -192,7 +192,7 @@ export MOLMIM_GPU_ID=7
 export DIFFDOCK_GPU_ID=7
 ```
 
-Bring up the two BioNemo NIMs to run locally. The two docker containers combined are around 60 GB in size, therefore this step may take a while to pull the containers.
+Bring up the two BioNeMo NIMs to run locally. The two docker containers combined are around 60 GB in size, therefore this step may take a while to pull the containers.
 ```bash
 docker compose -f deploy/compose/docker-compose.yaml --profile deploy-bionemo-nims-locally up -d
 ```
@@ -203,7 +203,7 @@ CONTAINER ID   NAMES                            STATUS
 cd7b76cca4be   bionemo-molmim-nim               Up 51 seconds (healthy)
 ...
 ```
-Prior to moving on to deploying the research agent, we need to export these two variables to point to the local deployment of the BioNemo NIMs:
+Prior to moving on to deploying the research agent, we need to export these two variables to point to the local deployment of the BioNeMo NIMs:
 ```bash
 export MOLMIM_ENDPOINT_URL=http://bionemo-molmim-nim:8000/generate
 export DIFFDOCK_ENDPOINT_URL=http://bionemo-diffdock-nim:8000/molecular-docking/diffdock/generate

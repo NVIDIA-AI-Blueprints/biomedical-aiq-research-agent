@@ -12,7 +12,7 @@ uv venv --python 3.12 --python-preference managed
 uv pip install -e "./aira[dev]"
 ```
 
-Spin up the BioNemo NIMs locally if you would like to host them locally (otherwise use the NVIDIA AI Endpoint):
+Spin up the BioNeMo NIMs locally if you would like to host them locally (otherwise use the NVIDIA AI Endpoint):
 ```bash
 docker compose -f deploy/compose/docker-compose.yaml --profile deploy-bionemo-nims-locally up -d
 ```
