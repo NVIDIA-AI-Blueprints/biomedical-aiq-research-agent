@@ -804,6 +804,17 @@ async def call_virtual_screening_nims(
     writer_info = ""
     logger.info("THE TARGET PROTEIN IS: " + state.target_protein)
     logger.info("THE RECENT SMALL MOLECULE THERAPY IS: " + state.recent_sml_molecule)
+    if state.target_protein == "" or state.recent_sml_molecule == "":
+        if state.target_protein == "":
+            writer_info += " \n The target protein was not found from the search. \n "
+        if state.recent_sml_molecule == "":
+            writer_info += " \n The recent small molecule therapy was not found from the search. \n "
+        writer_info += " \n Not proceeding with Virtual Screening."
+        writer({"call_virtual_screening_nims": writer_info})
+        logger.info("LEAVING VIRTUAL SCREENING DUE TO NOT ENOUGH INFO ON PROTEIN OR MOLECULE")
+        state.vs_steps_info = writer_info
+        return {"vs_steps_info": writer_info}
+            
     writer_info_new = f"\nUsing the following target protein and recent small molecule therapy for calls to virtual screening NIM: {state.target_protein}, {state.recent_sml_molecule}. \n "
     writer_info += writer_info_new
     writer({"call_virtual_screening_nims": writer_info_new})
