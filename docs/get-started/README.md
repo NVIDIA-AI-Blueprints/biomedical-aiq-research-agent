@@ -1,0 +1,2 @@
+- [Get Started with Biomedical AI-Q Research Agent Developer Blueprint Using NVIDIA API](./get-started-hosted-nims.md)
+- [Get started with Biomedical AI-Q Research Agent Developer Blueprint Using Docker Compose](./get-started-docker-compose.md)

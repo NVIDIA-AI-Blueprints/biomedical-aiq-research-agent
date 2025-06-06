@@ -5,7 +5,7 @@ The core research functionality of the [AI-Q NVIDIA Research Assistant](https://
 
 The two main functions that compose the research application, `generate_query` and `generate_summary` are defined in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). They are connected in the [register.py](../aira/src/aiq_aira/register.py) where the main application is registered as an app inside the AIQ Toolkit.
 
-The [nodes.py](../aira/src/aiq_aira/nodes.py) file is where the nodes in langgraph are define. Each of these nodes are then used by either `generate_query` or `generate_summary` in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). 
+The [nodes.py](../aira/src/aiq_aira/nodes.py) file is where the nodes in Langgraph are defined. Each of these nodes are then used by either `generate_query` or `generate_summary` in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). 
 
 If we compare the [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq) and this [Biomedical AI-Q Research Agent Developer Blueprint]( https://build.nvidia.com/nvidia/biomedical-aiq-research-agent), the core functionality of the additional Virtual Screening that is our adaptation to the original AI-Q NVIDIA Research Assistant Blueprint went into the files mentioned above. We modified the graph in Langgraph as seen in [`generate_summary.py`](../aira/src/aiq_aira/functions/generate_summary.py), where we have added the additional nodes `begin_virtual_screening_if_intended`, `call_virtual_screening_nims` and `combine_virtual_screening_info_into_summary` into the existing graph from the [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq) to have Virtual Screening capabilitiess.
 

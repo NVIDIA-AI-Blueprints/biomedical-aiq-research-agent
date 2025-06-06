@@ -2,7 +2,7 @@
 
 ## Overview
 
-The NVIDIA [Biomedical AI-Q Research Agent Developer Blueprint](https://build.nvidia.com/nvidia/biomedical-aiq-research-agent) allows you to create a deep research agent with virtual screening capabilities that can run on-premise, allowing anyone to create detailed research reports using on-premise data and web search. This developer blueprint is built on top of the [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq). We have added capabilities from the [Virtual Screening Blueprint](https://build.nvidia.com/nvidia/generative-virtual-screening-for-drug-discovery) in addition to the research capability, so that when a biomedical research is investigating a condition or disease, with a target protein and recent small-molecule therapy, virtual screening can help with discovering novel small-molecule therapies through molecular generation and docking. This developer blueprint serves as a demonstration on how you could add in your own additional custom functionalities that may not be virtual screening, to the existing research and report generation functionalities in the foundational [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq).
+The NVIDIA [Biomedical AI-Q Research Agent Developer Blueprint](https://build.nvidia.com/nvidia/biomedical-aiq-research-agent) allows you to create a deep research agent with virtual screening capabilities that can run on-premise, allowing anyone to create detailed research reports using on-premise data and web search. This developer blueprint is built on top of the [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq). We have added capabilities from the [Virtual Screening Blueprint](https://build.nvidia.com/nvidia/generative-virtual-screening-for-drug-discovery) in addition to the research capability, so that when a biomedical researcher is investigating a condition or disease, with a target protein and recent small-molecule therapy, virtual screening can help with discovering novel small-molecule therapies through guided molecular generation and docking. This developer blueprint serves as a demonstration on how you could add in your own custom functionalities that may not be virtual screening, to the existing research and report generation functionalities in the foundational [AI-Q NVIDIA Research Assistant Blueprint](https://build.nvidia.com/nvidia/aiq).
 
 ## Table of Contents
 
@@ -40,7 +40,7 @@ The NVIDIA [Biomedical AI-Q Research Agent Developer Blueprint](https://build.nv
 
 The Biomedical AI-Q Research Agent Developer Blueprint provides these components:
 
-- **Demo Frontend**: A docker container with a fully functional demo web application is provided. This web application is deployed by default if you follow the getting started guides and is the easiest way to quickly experiment with deep research using internal data sources via the NVIDA RAG blueprint. The source code for this demo web application is not distributed. 
+- **Demo Frontend**: A docker container with a fully functional demo web application is provided. This web application is deployed by default if you follow the [getting started guides](./docs/get-started/) and is the easiest way to quickly experiment with deep research using internal data sources via the NVIDA RAG blueprint. The source code for this demo web application is not distributed. 
 - **Backend Service via RESTful API**: The main Biomedical AI-Q Research Agent code is distributed as the `aiq-aira` Python package located in the `/aira` directory. These backend functions are available directly or via a RESTful API.
 - **Middleware Proxy**: An nginx proxy is deployed as part of the getting started guides. This proxy enables frontend web applications to interact with a single backend service. In turn, the proxy routes requests between the NVIDIA RAG blueprint services and the Biomedical AI-Q Research Agent service.
 
@@ -116,10 +116,15 @@ This blueprint can be run entirely with hosted NVIDIA NIM Microservices, see [ht
 
 ## Next Steps
 
-- Use the [Get Started Notebook](./notebooks/get_started_nvidia_api.ipynb) to deploy the blueprint with Docker and interact with the sample web application  
-- Deploy with [Docker Compose](./docs/get-started/get-started-docker-compose.md) for a full local deployments
-- Add your own customizable functionalities that goes alongside the foundational research functionality in AI-Q NVIDIA Research Assistant Blueprint. See this [Customization Guide](./docs/customization_for_your_own_app.md). This Biomedical AI-Q Research Agent developer blueprint can serve as a starting point for your customization, or as a reference for the additions needed.
-- [Local Development Guide](./docs/local-development.md)  
+- Deploy all components in the Biomedical AI-Q Research Agent with Docker Compose
+  - Follow [Get Started Notebook](./notebooks/get_started_nvidia_api.ipynb) for deploying with minimum local NIM deployment
+  - Follow [Docker Compose](./docs/get-started/get-started-docker-compose.md) for a full local deployment of all NIMs utilized in the blueprint
+- Research new a condition or disease that is of interest to you, other than the example topic. You coud upload documents related to the new topic to the existing collection or a new collection, and utilize the limited web search for context retrieval.
+- Add your own customizable functionalities to the foundational research functionality in [AI-Q NVIDIA Research Assistant Blueprint](https://github.com/NVIDIA-AI-Blueprints/aiq-research-assistant). This Biomedical AI-Q Research Agent developer blueprint can serve as a starting point for your customization, or as a reference for the additions needed. See this [Customization Guide](./docs/customization_for_your_own_app.md). 
+- If you would like to customize your backend application in AIQ Toolkit 
+  - with Docker Compose, make your customizations, and follow the same processes in the first bullet point to bring up `aira-backend` 
+  - without Docker Compose (virtual environment on bare metal), please visit the [Local Development Guide](./docs/local-development.md). 
+  
 
 ## License
 
