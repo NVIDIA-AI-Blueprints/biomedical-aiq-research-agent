@@ -71,7 +71,7 @@ Additionally, the blueprint uses these components:
 
 ### Disk Space
 
-310 GB minimum
+435 GB minimum
 
 ### OS Requirements
 

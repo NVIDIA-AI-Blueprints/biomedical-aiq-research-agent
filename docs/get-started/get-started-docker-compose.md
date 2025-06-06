@@ -22,6 +22,7 @@ This guide describes how to deploy the Biomedical AI-Q Research Agent using Dock
 
 *For a self-contained local deployment*
 - 5 H100 GPUs with 80GB of memory each **or** 8 A100 GPUs with 80GB of memory each
+- 435 GB Disk Space
 
 *For a deployment using hosted NVIDIA NIM microservices*
 No GPUs are required
