@@ -16,7 +16,7 @@ The NVIDIA [Biomedical AI-Q Research Agent Developer Blueprint](https://build.nv
   - [Drivers](#drivers)
   - [Hardware Requirements](#hardware-requirements)
   - [API Keys](#api-keys)
-- [Next Steps](#next-steps)
+- [Getting Started](#getting-started)
 - [License](#license)
 - [Security Considerations](#security-considerations)
 
@@ -25,7 +25,7 @@ The NVIDIA [Biomedical AI-Q Research Agent Developer Blueprint](https://build.nv
 - **Deep Research**: Given a report topic and desired report structure, an agent (1) creates a report plan, (2) searches data sources for answers, (3) writes a report, (4) reflects on gaps in the report for further queries, (5) finishes a report with a list of sources.
 - **Parallel Search**: During the research phase, multiple research questions are searched in parallel. For each query, the RAG service is consulted and an LLM-as-a-judge is used to check the relevancy of the results. If more information is needed, a fallback web search is performed. This search approach ensures internal documents are given preference over generic web results while maintaining accuracy. Performing query search in parallel allows for many data sources to be consulted in an efficient manner.
 - **Human-in-the-loop**: Human feedback on the report plan, interactive report edits, and Q&A with the final report.
-- **Data Sources**: Integration with the NVIDIA RAG blueprint to search multimodal documents with text, charts, and tables. Optional web search through Tavily.
+- **Data Sources**: Integration with the NVIDIA RAG blueprint to search multimodal documents with text, charts, and tables. For a full list of file formats supported such as `pdf`, `pptx`, `docx`, `jpeg` and more, and the modalities of extractions supported, please see the [RAG](https://github.com/NVIDIA-AI-Blueprints/rag) Blueprint. Optional web search through Tavily.
 - **Demo Web Application**: Frontend web application showcasing end-to-end use of the Biomedical AI-Q Research Agent.
 - **Virtual Screening**: Virtual Screening capabilities for discovering novel small-molecule therapies when researching a disease or condition. Including MolMIM for novel molecular generation and DiffDock for predicting the 3D structure of how a molecule interacts with a protein.
 - **Demonstration of Customizing the AI-Q Research Assistant Blueprint**: This blueprint demonstrates how we could add the Virtual Screeing capabilities into the foundational AI-Q Research Assistant Blueprint, and similarly, how other customized capabilities can be added into the foundational research AI-Q Research Assistant Blueprint.
@@ -70,16 +70,26 @@ Additionally, the blueprint uses these components:
 ## Minimum System Requirements 
 
 ### Disk Space
+#### For running with hosted NVIDIA NIM Microservices
+72 GB minimum (assuming only deploying RAG Ingestion locally as recommended)
 
+37 GB minimum (assuming all using hosted NVIDIA NIM microservices and no localy deployment)
+
+#### For running all NIM services locally 
 435 GB minimum
+
 
 ### OS Requirements
 
 Ubuntu 22.04
 
-### Deploy Options 
+### CPU Requirements
 
-[Docker Compose](./docs/get-started)
+16 CPUs
+
+### Deploy Options 
+- [Docker Compose with running minimal NIMs locally, utilizing NVIDIA AI Endpoint hosted NIMs](./docs/get-started/get-started-hosted-nims.md)
+- [Docker Compose with running all NIMs locally](./docs/get-started/get-started-docker-compose.md)
 
 ### Drivers
 
@@ -88,6 +98,12 @@ GPU Driver -  530.30.02 or later
 CUDA version - 12.6 or later  
 
 ### Hardware Requirements
+
+#### For running with hosted NVIDIA NIM Microservices
+
+This blueprint can be run entirely with hosted NVIDIA NIM Microservices without local NIM deployments. See [https://build.nvidia.com/](https://build.nvidia.com/) for details on each NIM. For this case, no GPU is required.
+
+While it can be run without local NIM deployments, we recommend deploying the RAG Ingestion services locally. For this case, the GPU requirement is `1 x L40S` or comparable.
 
 #### For running all services locally 
 
@@ -103,9 +119,7 @@ Generative Model for Molecular Docking | `nvcr.io/nim/mit/diffdock:2.1.0` | 1 x 
 
 *This recommendation is based off of the configuration used to test the blueprint. For alternative configurations, view the [RAG blueprint documentation](https://github.com/NVIDIA-AI-Blueprints/rag?tab=readme-ov-file#minimum-system-requirements).
 
-#### For running with hosted NVIDIA NIM Microservices
 
-This blueprint can be run entirely with hosted NVIDIA NIM Microservices, see [https://build.nvidia.com/](https://build.nvidia.com/) for details.
 
 
 ### API Keys
@@ -114,7 +128,7 @@ This blueprint can be run entirely with hosted NVIDIA NIM Microservices, see [ht
 - [TAVILY API Key](https://tavily.com) for optional web search
 
 
-## Next Steps
+## Getting Started
 
 - Deploy all components in the Biomedical AI-Q Research Agent with Docker Compose
   - Follow [Get Started Notebook](./notebooks/get_started_nvidia_api.ipynb) for deploying with minimum local NIM deployment
@@ -125,6 +139,8 @@ This blueprint can be run entirely with hosted NVIDIA NIM Microservices, see [ht
   - with Docker Compose, make your customizations, and follow the same processes in the first bullet point to bring up `aira-backend` 
   - without Docker Compose (virtual environment on bare metal), please visit the [Local Development Guide](./docs/local-development.md). 
   
+## Troubleshooting
+Please visit the [troubleshooting guide](./docs/troubleshooting.md).
 
 ## License
 
