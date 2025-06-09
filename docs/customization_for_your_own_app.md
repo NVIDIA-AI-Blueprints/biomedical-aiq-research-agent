@@ -20,7 +20,7 @@ builder.add_edge("combine_virtual_screening_info_into_summary", "finalize_summar
 builder.add_edge("finalize_summary", END)
 ```
 
-![reference architecture for this blueprint](./images/biomedical_aiq_reference_architecture.jpg)
+![reference architecture for this blueprint](./images/biomedical_aiq_reference_architecture.png)
 
 When you adapt this blueprint for adding your own custom functionalities, you might want to add in entire seperate function(s) in addition to the two functions in [`generate_queries.py`](../aira/src/aiq_aira/functions/generate_queries.py) and [`generate_summary.py`](../aira/src/aiq_aira/functions/generate_summary.py), and connect your function to the rest in [register.py](../aira/src/aiq_aira/register.py). You could also do what we have done in this blueprint, which is simply add nodes to the Langgraph graphs in existing functions. You might also want to remove certain nodes within the graph, or remove a certain function altogether.
 

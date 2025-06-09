@@ -65,7 +65,7 @@ Additionally, the blueprint uses these components:
 
 ## Technical Diagram 
 
-![Architecture Diagram](./docs/images/biomedical_aiq_reference_architecture.jpg)
+![Architecture Diagram](./docs/images/biomedical_aiq_reference_architecture.png)
 
 ## Minimum System Requirements 
 
