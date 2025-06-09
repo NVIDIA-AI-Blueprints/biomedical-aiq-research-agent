@@ -458,8 +458,7 @@ async def find_protein_and_molecule( llm, topic, writer, config, collection, sea
 
         }
         system_prompt = ""
-        if hasattr(llm, "model_name") and llm.model_name == "nvidia/llama-3.3-nemotron-super-49b-v1":
-            system_prompt = "detailed thinking on"
+        system_prompt = update_system_prompt(system_prompt, llm)
 
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -904,8 +903,7 @@ async def combine_virtual_screening_info_into_summary(state: AIRAState, config: 
 
     }
     system_prompt = ""
-    if hasattr(llm, "model_name") and llm.model_name == "nvidia/llama-3.3-nemotron-super-49b-v1":
-        system_prompt = "detailed thinking on"
+    system_prompt = update_system_prompt(system_prompt, llm)
 
     prompt = ChatPromptTemplate.from_messages(
         [
