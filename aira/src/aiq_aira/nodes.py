@@ -924,7 +924,7 @@ async def combine_virtual_screening_info_into_summary(state: AIRAState, config: 
 
     try: 
         writer({"add_virtual_screening_info_into_report": "\n Starting to combine virtual screening info into exising report draft \n"})
-        async with asyncio.timeout(ASYNC_TIMEOUT):
+        async with asyncio.timeout(ASYNC_TIMEOUT*3):
             async for chunk in chain.astream(input, stream_usage=True):
                 result += chunk.content
                 if chunk.content == "</think>":
