@@ -56,7 +56,7 @@ The [AI-Q Research Assistant](https://build.nvidia.com/nvidia/aiq) is evaluated 
 
 ## How are the REST Endpoints Served?
 
-The REST endpoints are created using the [NVIDIA Agent Intelligence Toolkit](https://github.com/NVIDIA/AIQToolkit). Each endpoint is defined as a function and frontend endpoint in the `aira/configs/config.yml` configuration file. The docker compose entrypoint for the backend invokes the `aiq serve` command which makes these endpoints available as REST APIs. The functions are registered with the AIQ toolkit in the `register.py` file, and the source code for the main endpoints is located in the `functions` directory. 
+The REST endpoints are created using the [NVIDIA NeMo Agent Toolkit](https://github.com/NVIDIA/NeMo-Agent-Toolkit). Each endpoint is defined as a function and frontend endpoint in the `aira/configs/config.yml` configuration file. The docker compose entrypoint for the backend invokes the `aiq serve` command which makes these endpoints available as REST APIs. The functions are registered with the NVIDIA NeMo Agent Toolkit in the `register.py` file, and the source code for the main endpoints is located in the `functions` directory. 
 
 ## How do I Debug a Hallucination?
 

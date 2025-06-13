@@ -1,9 +1,9 @@
 # Customization 
 
 ## Add Your Own Functionalities In Addition to Research
-The core research functionality of the [AI-Q NVIDIA Research Assistant](https://build.nvidia.com/nvidia/aiq) is implemented in the application located in [aira/](../aira/) powered by [AIQ Toolkit](https://github.com/NVIDIA/AIQToolkit). 
+The core research functionality of the [AI-Q NVIDIA Research Assistant](https://build.nvidia.com/nvidia/aiq) is implemented in the application located in [aira/](../aira/) powered by [NVIDIA NeMo Agent Toolkit](https://github.com/NVIDIA/NeMo-Agent-Toolkit). 
 
-The two main functions that compose the research application, `generate_query` and `generate_summary` are defined in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). They are connected in the [register.py](../aira/src/aiq_aira/register.py) where the main application is registered as an app inside the AIQ Toolkit.
+The two main functions that compose the research application, `generate_query` and `generate_summary` are defined in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). They are connected in the [register.py](../aira/src/aiq_aira/register.py) where the main application is registered as an app inside the NVIDIA NeMo Agent Toolkit.
 
 The [nodes.py](../aira/src/aiq_aira/nodes.py) file is where the nodes in Langgraph are defined. Each of these nodes are then used by either `generate_query` or `generate_summary` in [aira/src/aiq_aira/functions/](../aira/src/aiq_aira/functions/). 
 

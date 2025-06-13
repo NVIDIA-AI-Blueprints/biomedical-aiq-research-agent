@@ -50,7 +50,7 @@ Additionally, the blueprint uses these components:
 - [**Virtual Screening Blueprint**](https://build.nvidia.com/nvidia/generative-virtual-screening-for-drug-discovery) Provides virtual screening capabilities for discovering novel small-molecule therapies. We are specifically using the following components of the Virtual Screening Blueprint:
   - [MolMIM](https://build.nvidia.com/nvidia/molmim-generate) for controlled generation of new molecules, finding molecules with the right properties based on a seed molecule.
   - [DiffDock](https://build.nvidia.com/mit/diffdock) for prediction the 3D structure of how a molecule interacts with a protein.
-- [**NVIDIA Agent Intelligence Toolkit**](https://github.com/NVIDIA/AIQToolkit)
+- [**NVIDIA NeMo Agent Toolkit**](https://github.com/NVIDIA/NeMo-Agent-Toolkit)
   Provides a toolkit for managing a LangGraph codebase. Provides observability, API services and documentation, and easy configuration of different LLMs.
 - [**NVIDIA RAG Blueprint**](https://github.com/NVIDIA-AI-Blueprints/rag)
   Provides a solution for querying large sets of on-premise multi-modal documents.
@@ -135,7 +135,7 @@ Generative Model for Molecular Docking | `nvcr.io/nim/mit/diffdock:2.1.0` | 1 x 
   - Follow [Docker Compose](./docs/get-started/get-started-docker-compose.md) for a full local deployment of all NIMs utilized in the blueprint
 - Research new a condition or disease that is of interest to you, other than the example topic. You coud upload documents related to the new topic to the existing collection or a new collection, and utilize the limited web search for context retrieval.
 - Add your own customizable functionalities to the foundational research functionality in [AI-Q NVIDIA Research Assistant Blueprint](https://github.com/NVIDIA-AI-Blueprints/aiq-research-assistant). This Biomedical AI-Q Research Agent developer blueprint can serve as a starting point for your customization, or as a reference for the additions needed. See this [Customization Guide](./docs/customization_for_your_own_app.md). 
-- If you would like to customize your backend application in AIQ Toolkit 
+- If you would like to customize your backend application in NVIDIA NeMo Agent Toolkit 
   - with Docker Compose, make your customizations, and follow the same processes in the first bullet point to bring up `aira-backend` 
   - without Docker Compose (virtual environment on bare metal), please visit the [Local Development Guide](./docs/local-development.md). 
   
