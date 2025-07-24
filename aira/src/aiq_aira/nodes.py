@@ -698,6 +698,12 @@ async def dock_molecule(curr_out_dir: str, folded_protein: str, generated_ligand
             return docking_status
 
 
+def get_isomeric_smiles(pcp_compound):
+    absolute_smiles = [i['value']["sval"] for i in pcp_compound.to_dict().get("record").get("props") if i["urn"]["label"] == "SMILES" and i["urn"]["name"] == "Absolute"]
+    if len(absolute_smiles) == 0:
+        return None
+    return absolute_smiles[0]
+
 def get_smiles_from_molecule_name(compound_name: str, writer: StreamWriter):
     compounds = pcp.get_compounds(compound_name, 'name')
     writer_info = ""
@@ -709,7 +715,7 @@ def get_smiles_from_molecule_name(compound_name: str, writer: StreamWriter):
         return None, writer_info
     else:
         for compound in compounds:
-            writer_info_new = f"\nPreparation step - Found SMILES string: {str(compound.isomeric_smiles)} for molecule {str(compound.cid)} with name {compound_name} in pubchem. \n "
+            writer_info_new = f"\nPreparation step - Found SMILES string: {str(get_isomeric_smiles(compound))} for molecule {str(compound.cid)} with name {compound_name} in pubchem. \n "
             writer_info += writer_info_new
             writer({"call_virtual_screening_nims": writer_info_new})
             
@@ -718,7 +724,7 @@ def get_smiles_from_molecule_name(compound_name: str, writer: StreamWriter):
             writer_info += writer_info_new
             writer({"call_virtual_screening_nims": writer_info_new})
         # return the first found molecule's SMILES string if there are more than one molecule found
-        return str(compounds[0].isomeric_smiles), writer_info
+        return str(get_isomeric_smiles(compounds[0])), writer_info
 
 def get_protein_id_from_name(protein_name: str, writer: StreamWriter):
     q1 = TextQuery(protein_name)
