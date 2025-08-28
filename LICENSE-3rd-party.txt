@@ -54,7 +54,6 @@ below.
    langgraph-checkpoint	            2.0.10
    langgraph-sdk	                0.1.51
    langsmith	                    0.3.4
-   litellm	                        1.63.7
    markdown-it-py	                3.0.0
    marshmallow	                    3.26.1
    mcp	                            1.7.1

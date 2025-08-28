@@ -28,7 +28,6 @@ dependencies = [
   "h11==0.16.0",
   "httpcore==1.0.9",
   "httpx==0.28.1",
-  "litellm==1.63.7",
   "idna==3.10",
   "jiter==0.8.2",
   "jsonpatch==1.33",
