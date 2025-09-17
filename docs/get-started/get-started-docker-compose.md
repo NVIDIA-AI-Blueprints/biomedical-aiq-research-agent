@@ -45,11 +45,10 @@ This section demonstrates how to deploy Biomedical AI-Q Research Agent.
 
 ### Git clone
 
-Clone the biomedical-aiq-research-agent repo and set it as the working directory:
+Clone the biomedical-aiq-research-agent repo:
 
 ```bash
-git clone git@github.com:NVIDIA-AI-Blueprints/biomedical-aiq-research-agent.git
-cd biomedical-aiq-research-agent
+git clone https://github.com/NVIDIA-AI-Blueprints/biomedical-aiq-research-agent.git
 ```
 
 ### Setup Environment Variables
@@ -81,7 +80,14 @@ export MODEL_DIRECTORY=~/.cache/model-cache
 Before deploying the Biomedical AI-Q Research Agent, deploy RAG by following [these instructions](https://github.com/NVIDIA-AI-Blueprints/rag/blob/main/docs/quickstart.md#start-using-on-prem-models).
 
 ```bash
-git clone https://github.com/NVIDIA-AI-Blueprints/rag.git -b v2.1.0
+git clone https://github.com/NVIDIA-AI-Blueprints/rag.git -b v2.2.1
+```
+
+Open the file `rag/deploy/compose/.env` and confirm that all of the values in the section `# ==== Endpoints for using cloud NIMs ===` are commented out. Then source this file:
+
+
+```bash
+source rag/deploy/compose/.env
 ```
 
 Deploy the RAG NVIDIA NIM microservices, including the LLM. *This step can take up to 45 minutes*.
@@ -162,6 +168,7 @@ rag-server                       Up 4 minutes
 Next deploy the instruct model. *This step can take up to 45 minutes*.
 
 ```bash
+cd biomedical-aiq-research-agent
 docker compose -f deploy/compose/docker-compose.yaml --profile aira-instruct-llm up -d
 ```
 
@@ -169,7 +176,7 @@ For A100 system, run the following commands
 
 ```bash
 export AIRA_LLM_MS_GPU_ID=3,4,5,6
-
+cd biomedical-aiq-research-agent
 docker compose -f deploy/compose/docker-compose.yaml --profile aira-instruct-llm up -d
 ```
 
@@ -293,9 +300,10 @@ docker compose -f deploy/compose/docker-compose.yaml --profile deploy-bionemo-ni
 docker compose -f deploy/compose/docker-compose.yaml --profile aira-instruct-llm down
 ```
 
-4. Stop the RAG services. (Ensure you still have the variable `NGC_API_KEY` exported)
+4. Stop the RAG services. (Ensure you still have the variable `NGC_API_KEY` exported, and navigate to the directory containing `rag/`)
 :
 ```bash
+cd ..
 docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down
 docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down
 docker compose -f rag/deploy/compose/vectordb.yaml down
