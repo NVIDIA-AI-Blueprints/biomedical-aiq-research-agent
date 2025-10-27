@@ -21,7 +21,7 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
           # Prepare test email content
-          cat << EOF > /tmp/test_email.txt
+          cat << 'EOF' > /tmp/test_email.txt
 Subject: [TEST] Email Notification Test
 From: ${MAIL_FROM}
 To: ${{ github.actor }}@users.noreply.github.com
