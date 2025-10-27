@@ -300,28 +300,59 @@ jobs:
     steps:
       - name: "[SUMMARY] Generate Report"
         run: |
-          echo "=========================================="
-          echo "Biomedical AI-Q Research Agent Test Summary"
-          echo "=========================================="
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "Triggered by: ${{ github.event_name }}"
-          echo ""
-          echo "=========================================="
-          echo "Test Results"
-          echo "=========================================="
-          echo "All Cloud Mode: ${{ needs.all-cloud.result }}"
-          echo "Local Ingestion Mode: ${{ needs.local-ingestion.result }}"
-          echo ""
+          echo "# Deployment Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           
+          # Job Results
+          if [ "${{ needs.all-cloud.result }}" = "success" ]; then
+            echo "[PASS] **All Cloud Mode** - Execution completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "[FAIL] **All Cloud Mode** - Execution failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.local-ingestion.result }}" = "success" ]; then
+            echo "[PASS] **Local Ingestion Mode** - Execution completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "[FAIL] **Local Ingestion Mode** - Execution failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Summary Table
+          echo "## Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployment Mode | Status | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------------|--------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| All Cloud | ${{ needs.all-cloud.result }} | All NIMs use hosted APIs |" >> $GITHUB_STEP_SUMMARY
+          echo "| Local Ingestion | ${{ needs.local-ingestion.result }} | Local ingestion NIMs + hosted APIs |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Build Info
+          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **RAG Version:** ${{ env.RAG_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall Status
           if [ "${{ needs.all-cloud.result }}" = "success" ] && [ "${{ needs.local-ingestion.result }}" = "success" ]; then
-            echo "Overall Status: SUCCESS - Both deployment modes passed"
+            echo "### [SUCCESS] Overall Status" >> $GITHUB_STEP_SUMMARY
+            echo "Both deployment modes completed successfully" >> $GITHUB_STEP_SUMMARY
             exit 0
           elif [ "${{ needs.all-cloud.result }}" = "success" ] || [ "${{ needs.local-ingestion.result }}" = "success" ]; then
-            echo "Overall Status: PARTIAL - At least one deployment mode passed"
+            echo "### [PARTIAL] Overall Status" >> $GITHUB_STEP_SUMMARY
+            echo "At least one deployment mode completed successfully" >> $GITHUB_STEP_SUMMARY
             exit 0
           else
-            echo "Overall Status: FAILURE - Both deployment modes failed"
+            echo "### [FAILURE] Overall Status" >> $GITHUB_STEP_SUMMARY
+            echo "Both deployment modes failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
