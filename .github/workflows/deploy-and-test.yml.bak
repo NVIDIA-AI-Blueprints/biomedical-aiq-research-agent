@@ -298,6 +298,11 @@ jobs:
     if: always()
     
     steps:
+      - name: "[SETUP] Install Dependencies"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip mailutils
+
       - name: "[SUMMARY] Generate Report"
         run: |
           echo "# Deployment Test Results" >> $GITHUB_STEP_SUMMARY
@@ -356,3 +361,84 @@ jobs:
             echo "Both deployment modes failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
+      
+      - name: "[NOTIFY] Send Email Notification"
+        if: always()
+        env:
+          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: |
+          # Determine overall status
+          if [ "${{ needs.all-cloud.result }}" = "success" ] && [ "${{ needs.local-ingestion.result }}" = "success" ]; then
+            OVERALL_STATUS="SUCCESS"
+          elif [ "${{ needs.all-cloud.result }}" = "success" ] || [ "${{ needs.local-ingestion.result }}" = "success" ]; then
+            OVERALL_STATUS="PARTIAL SUCCESS"
+          else
+            OVERALL_STATUS="FAILURE"
+          fi
+          
+          # Prepare email content
+          cat << EOF > /tmp/email_body.txt
+Subject: [${OVERALL_STATUS}] Biomedical AI-Q Research Agent - Workflow Completed
+From: ${MAIL_FROM}
+To: ${{ github.actor }}@users.noreply.github.com
+
+Deployment Test Results
+========================
+
+Repository: ${{ github.repository }}
+Branch: ${{ github.ref_name }}
+Commit: ${{ github.sha }}
+Triggered by: ${{ github.actor }}
+Workflow: ${{ github.workflow }}
+
+Test Results:
+-------------
+All Cloud Mode: ${{ needs.all-cloud.result }}
+Local Ingestion Mode: ${{ needs.local-ingestion.result }}
+
+Overall Status: ${OVERALL_STATUS}
+
+View Details:
+${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+---
+This is an automated notification from GitHub Actions.
+EOF
+          
+          # Send email using Python
+          python3 << 'PYTHON_SCRIPT'
+import smtplib
+import os
+from email.mime.text import MIMEText
+
+mail_server = os.environ.get('MAIL_SERVER', '')
+mail_port = int(os.environ.get('MAIL_PORT', '25'))
+mail_from = os.environ.get('MAIL_FROM', '')
+mail_to = "${{ github.actor }}@users.noreply.github.com"
+
+if mail_server and mail_from:
+    try:
+        with open('/tmp/email_body.txt', 'r') as f:
+            content = f.read()
+        
+        # Extract subject
+        lines = content.split('\n')
+        subject = lines[0].replace('Subject: ', '')
+        body = '\n'.join(lines[4:])
+        
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = mail_from
+        msg['To'] = mail_to
+        
+        with smtplib.SMTP(mail_server, mail_port) as server:
+            server.send_message(msg)
+        
+        print(f"Email sent successfully to {mail_to}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+else:
+    print("Email notification skipped: MAIL_SERVER or MAIL_FROM not configured")
+PYTHON_SCRIPT
