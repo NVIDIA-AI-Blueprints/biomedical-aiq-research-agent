@@ -13,6 +13,34 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: "[DEBUG] Check Configuration"
+        env:
+          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: |
+          echo "Checking email configuration..."
+          echo "MAIL_SERVER is set: ${{ secrets.MAIL_SERVER != '' }}"
+          echo "MAIL_PORT is set: ${{ secrets.MAIL_PORT != '' }}"
+          echo "MAIL_FROM is set: ${{ secrets.MAIL_FROM != '' }}"
+          echo "MAIL_SERVER length: ${#MAIL_SERVER}"
+          echo "MAIL_SERVER (masked): ${MAIL_SERVER:0:3}***"
+          
+          if [ -z "${MAIL_SERVER}" ]; then
+            echo "ERROR: MAIL_SERVER is empty"
+            exit 1
+          fi
+          
+          if [ -z "${MAIL_PORT}" ]; then
+            echo "ERROR: MAIL_PORT is empty"
+            exit 1
+          fi
+          
+          if [ -z "${MAIL_FROM}" ]; then
+            echo "ERROR: MAIL_FROM is empty"
+            exit 1
+          fi
+      
       - name: "[TEST] Send Test Email"
         uses: dawidd6/action-send-mail@v3
         with:
