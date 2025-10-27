@@ -9,89 +9,31 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: "[SETUP] Install Python"
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3
-      
       - name: "[TEST] Send Test Email"
-        env:
-          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
-          MAIL_PORT: ${{ secrets.MAIL_PORT }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-        run: |
-          # Prepare test email content
-          cat << 'EOF' > /tmp/test_email.txt
-Subject: [TEST] Email Notification Test
-From: ${MAIL_FROM}
-To: ${{ github.actor }}@users.noreply.github.com
-
-This is a test email from GitHub Actions.
-========================
-
-Repository: ${{ github.repository }}
-Branch: ${{ github.ref_name }}
-Triggered by: ${{ github.actor }}
-Workflow: ${{ github.workflow }}
-
-Test Status: SUCCESS
-
-View Details:
-${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
----
-This is an automated test notification.
-If you received this email, the notification system is working correctly.
-EOF
-          
-          # Send email using Python
-          python3 << 'PYTHON_SCRIPT'
-import smtplib
-import os
-from email.mime.text import MIMEText
-
-mail_server = os.environ.get('MAIL_SERVER', '')
-mail_port_str = os.environ.get('MAIL_PORT', '25')
-mail_from = os.environ.get('MAIL_FROM', '')
-mail_to = "${{ github.actor }}@users.noreply.github.com"
-
-print(f"Mail Server: {mail_server}")
-print(f"Mail Port: {mail_port_str}")
-print(f"Mail From: {mail_from}")
-print(f"Mail To: {mail_to}")
-
-if mail_server and mail_from:
-    try:
-        mail_port = int(mail_port_str)
-        
-        with open('/tmp/test_email.txt', 'r') as f:
-            content = f.read()
-        
-        # Extract subject
-        lines = content.split('\n')
-        subject = lines[0].replace('Subject: ', '')
-        body = '\n'.join(lines[4:])
-        
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = mail_from
-        msg['To'] = mail_to
-        
-        print(f"Connecting to {mail_server}:{mail_port}...")
-        with smtplib.SMTP(mail_server, mail_port, timeout=30) as server:
-            print("Connected. Sending email...")
-            server.send_message(msg)
-        
-        print(f"[SUCCESS] Email sent successfully to {mail_to}")
-    except Exception as e:
-        print(f"[FAILED] Failed to send email: {e}")
-        import traceback
-        traceback.print_exc()
-        exit(1)
-else:
-    print("[ERROR] MAIL_SERVER or MAIL_FROM not configured")
-    print(f"MAIL_SERVER is empty: {not mail_server}")
-    print(f"MAIL_FROM is empty: {not mail_from}")
-    exit(1)
-PYTHON_SCRIPT
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ""
+          password: ""
+          subject: "[TEST] Email Notification Test from GitHub Actions"
+          to: ${{ github.actor }}@users.noreply.github.com
+          from: ${{ secrets.MAIL_FROM }}
+          body: |
+            This is a test email from GitHub Actions.
+            ========================
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Triggered by: ${{ github.actor }}
+            Workflow: ${{ github.workflow }}
+            
+            Test Status: SUCCESS
+            
+            View Details:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ---
+            This is an automated test notification.
+            If you received this email, the notification system is working correctly.
 
