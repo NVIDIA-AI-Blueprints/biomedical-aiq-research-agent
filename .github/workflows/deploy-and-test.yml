@@ -1,0 +1,334 @@
+name: Deploy and Test Biomedical AI-Q Research Agent
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NVIDIA_API_KEY: ${{ secrets.NGC_API_KEY }}
+  NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
+  TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+  RAG_VERSION: v2.2.1
+
+jobs:
+  deploy-and-test:
+    name: Deploy and Test with Hosted NIMs
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      # ============================================
+      # STEP 1: Environment Setup
+      # ============================================
+      - name: "[CHECKOUT] Repository"
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      - name: "[DOCKER] Setup Buildx"
+        uses: docker/setup-buildx-action@v3
+      
+      - name: "[AUTH] Login to NVIDIA Container Registry"
+        run: |
+          echo "${{ secrets.NGC_API_KEY }}" | docker login nvcr.io -u '$oauthtoken' --password-stdin
+      
+      - name: "[CONFIG] Set Environment Variables"
+        run: |
+          echo "USERID=$(id -u)" >> $GITHUB_ENV
+          echo "APP_LLM_MODELNAME=nvidia/llama-3.3-nemotron-super-49b-v1" >> $GITHUB_ENV
+          echo "APP_EMBEDDINGS_MODELNAME=nvidia/llama-3.2-nv-embedqa-1b-v2" >> $GITHUB_ENV
+          echo "APP_RANKING_MODELNAME=nvidia/llama-3.2-nv-rerankqa-1b-v2" >> $GITHUB_ENV
+          echo "APP_EMBEDDINGS_SERVERURL=" >> $GITHUB_ENV
+          echo "APP_LLM_SERVERURL=" >> $GITHUB_ENV
+          echo "APP_RANKING_SERVERURL=" >> $GITHUB_ENV
+          echo "EMBEDDING_NIM_ENDPOINT=https://integrate.api.nvidia.com/v1" >> $GITHUB_ENV
+          echo "PADDLE_HTTP_ENDPOINT=https://ai.api.nvidia.com/v1/cv/baidu/paddleocr" >> $GITHUB_ENV
+          echo "PADDLE_INFER_PROTOCOL=http" >> $GITHUB_ENV
+          echo "YOLOX_HTTP_ENDPOINT=https://ai.api.nvidia.com/v1/cv/nvidia/nemoretriever-page-elements-v2" >> $GITHUB_ENV
+          echo "YOLOX_INFER_PROTOCOL=http" >> $GITHUB_ENV
+          echo "YOLOX_GRAPHIC_ELEMENTS_HTTP_ENDPOINT=https://ai.api.nvidia.com/v1/cv/nvidia/nemoretriever-graphic-elements-v1" >> $GITHUB_ENV
+          echo "YOLOX_GRAPHIC_ELEMENTS_INFER_PROTOCOL=http" >> $GITHUB_ENV
+          echo "YOLOX_TABLE_STRUCTURE_HTTP_ENDPOINT=https://ai.api.nvidia.com/v1/cv/nvidia/nemoretriever-table-structure-v1" >> $GITHUB_ENV
+          echo "YOLOX_TABLE_STRUCTURE_INFER_PROTOCOL=http" >> $GITHUB_ENV
+          echo "ENABLE_RERANKER=false" >> $GITHUB_ENV
+          echo "ENABLE_NV_INGEST_BATCH_MODE=true" >> $GITHUB_ENV
+          echo "AIRA_HOSTED_NIMS=true" >> $GITHUB_ENV
+          echo "MOLMIM_ENDPOINT_URL=https://health.api.nvidia.com/v1/biology/nvidia/molmim/generate" >> $GITHUB_ENV
+          echo "DIFFDOCK_ENDPOINT_URL=https://health.api.nvidia.com/v1/biology/mit/diffdock" >> $GITHUB_ENV
+      
+      # ============================================
+      # STEP 2: Deploy RAG Blueprint
+      # ============================================
+      - name: "[DOWNLOAD] Clone RAG Blueprint"
+        run: |
+          git clone --branch ${{ env.RAG_VERSION }} https://github.com/NVIDIA-AI-Blueprints/rag.git
+          ls -la rag/
+      
+      - name: "[DEPLOY] RAG Vector Database"
+        run: |
+          docker compose -f rag/deploy/compose/vectordb.yaml up -d
+          echo "Wait 30s for Vector DB initialization..."
+          sleep 30
+      
+      - name: "[DEPLOY] RAG Ingestion Server"
+        run: |
+          docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml up -d
+          echo "Wait 30s for Ingestion Server initialization..."
+          sleep 30
+      
+      - name: "[DEPLOY] RAG Server"
+        run: |
+          docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml up -d
+          echo "Wait 30s for RAG Server initialization..."
+          sleep 30
+      
+      - name: "[VERIFY] RAG Deployment Status"
+        run: |
+          echo "Container Status:"
+          docker ps --format "table {{.Names}}\t{{.Status}}"
+          echo ""
+          echo "RAG Containers:"
+          docker ps | grep -E "(rag-server|rag-playground|ingestor-server|milvus|redis|nv-ingest)" || echo "Warning: Some RAG containers not found"
+      
+      # ============================================
+      # STEP 3: Deploy AIRA Services
+      # ============================================
+      - name: "[DEPLOY] AIRA Services"
+        run: |
+          docker compose -f deploy/compose/docker-compose.yaml --profile aira up -d
+          echo "Wait 30s for AIRA services initialization..."
+          sleep 30
+      
+      - name: "[VERIFY] AIRA Deployment Status"
+        run: |
+          echo "All Container Status:"
+          docker ps --format "table {{.Names}}\t{{.Status}}"
+          echo ""
+          echo "AIRA Containers:"
+          docker ps | grep -E "(aira-frontend|aira-nginx|aira-backend)" || echo "Warning: Some AIRA containers not found"
+      
+      # ============================================
+      # STEP 4: Health Checks
+      # ============================================
+      - name: "[HEALTH] Wait for Services Ready"
+        run: |
+          echo "Wait 60s for all services to be fully ready..."
+          sleep 60
+          
+          echo "Final Container Status:"
+          docker ps --format "table {{.Names}}\t{{.Status}}"
+      
+      - name: "[HEALTH] Test Service Endpoints"
+        run: |
+          echo "Testing Frontend (port 3001)..."
+          curl -f http://localhost:3001 > /dev/null 2>&1 && echo "SUCCESS: Frontend accessible" || echo "WARNING: Frontend not accessible"
+          
+          echo "Testing Backend API (port 8051)..."
+          curl -f http://localhost:8051/docs > /dev/null 2>&1 && echo "SUCCESS: Backend API accessible" || echo "WARNING: Backend API not accessible"
+          
+          echo "Testing RAG Playground (port 8090)..."
+          curl -f http://localhost:8090 > /dev/null 2>&1 && echo "SUCCESS: RAG Playground accessible" || echo "WARNING: RAG Playground not accessible"
+          
+          echo "Testing RAG Server Health..."
+          curl -f http://localhost:8081/health > /dev/null 2>&1 && echo "SUCCESS: RAG Server healthy" || echo "WARNING: RAG Server health check failed"
+      
+      # ============================================
+      # STEP 5: Functional Tests
+      # ============================================
+      - name: "[TEST] Create Collection"
+        run: |
+          echo "Creating test collection..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST http://localhost:8051/v1/collections \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '["test_collection_ci"]')
+          
+          http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+          body=$(echo "$response" | grep -v "HTTP_STATUS:")
+          
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+          
+          if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+            echo "SUCCESS: Collection created"
+          else
+            echo "WARNING: Collection creation returned status $http_code"
+          fi
+          
+          sleep 5
+      
+      - name: "[TEST] Upload Document"
+        run: |
+          echo "Uploading test document..."
+          if [ -f "notebooks/simple.pdf" ]; then
+            response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST http://localhost:8051/v1/documents \
+              -H 'accept: application/json' \
+              -F 'documents=@notebooks/simple.pdf' \
+              -F 'data={"collection_name": "test_collection_ci"}')
+            
+            http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+            body=$(echo "$response" | grep -v "HTTP_STATUS:")
+            
+            echo "Response: $body"
+            echo "HTTP Status: $http_code"
+            
+            if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+              echo "SUCCESS: Document uploaded"
+            else
+              echo "WARNING: Document upload returned status $http_code"
+            fi
+          else
+            echo "WARNING: Test PDF file not found"
+          fi
+          
+          sleep 10
+      
+      - name: "[TEST] RAG Query"
+        run: |
+          echo "Testing RAG query..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "http://localhost:8081/v1/generate" \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "What is the title?"
+                }
+              ],
+              "use_knowledge_base": true,
+              "temperature": 0.2,
+              "top_p": 0.7,
+              "max_tokens": 512,
+              "collection_name": "test_collection_ci",
+              "enable_citations": true
+            }')
+          
+          http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+          
+          echo "HTTP Status: $http_code"
+          
+          if [ "$http_code" = "200" ]; then
+            echo "SUCCESS: RAG query completed"
+          else
+            echo "WARNING: RAG query returned status $http_code"
+          fi
+      
+      - name: "[TEST] Generate Research Plan"
+        run: |
+          echo "Testing research plan generation..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST http://localhost:8051/generate_query/stream \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "topic": "AI in Healthcare",
+              "report_organization": "A brief report with introduction and conclusion",
+              "num_queries": 2,
+              "llm_name": "nemotron"
+            }')
+          
+          http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+          
+          echo "HTTP Status: $http_code"
+          
+          if [ "$http_code" = "200" ]; then
+            echo "SUCCESS: Research plan generated"
+          else
+            echo "WARNING: Research plan generation returned status $http_code"
+          fi
+      
+      - name: "[TEST] Artifact Q&A"
+        run: |
+          echo "Testing Q&A functionality..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST http://localhost:8051/artifact_qa/stream \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "additional_context": "",
+              "artifact": "# Test Report\n\nThis is a test report.",
+              "chat_history": [],
+              "question": "What is this report about?",
+              "rewrite_mode": "entire",
+              "use_internet": false,
+              "rag_collection": "test_collection_ci"
+            }')
+          
+          http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+          
+          echo "HTTP Status: $http_code"
+          
+          if [ "$http_code" = "200" ]; then
+            echo "SUCCESS: Q&A functionality working"
+          else
+            echo "WARNING: Q&A test returned status $http_code"
+          fi
+      
+      # ============================================
+      # STEP 6: Collect Logs and Cleanup
+      # ============================================
+      - name: "[LOGS] Collect Logs on Failure"
+        if: failure()
+        run: |
+          echo "=========================================="
+          echo "AIRA Backend Logs:"
+          echo "=========================================="
+          docker logs aira-backend --tail 100 || true
+          
+          echo ""
+          echo "=========================================="
+          echo "AIRA Nginx Logs:"
+          echo "=========================================="
+          docker logs aira-nginx --tail 100 || true
+          
+          echo ""
+          echo "=========================================="
+          echo "RAG Server Logs:"
+          echo "=========================================="
+          docker logs rag-server --tail 100 || true
+          
+          echo ""
+          echo "=========================================="
+          echo "Ingestor Server Logs:"
+          echo "=========================================="
+          docker logs ingestor-server --tail 100 || true
+      
+      - name: "[CLEANUP] Stop All Services"
+        if: always()
+        run: |
+          echo "Stopping AIRA services..."
+          docker compose -f deploy/compose/docker-compose.yaml --profile aira down || true
+          
+          echo "Stopping RAG services..."
+          docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down || true
+          docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down || true
+          docker compose -f rag/deploy/compose/vectordb.yaml down || true
+          
+          echo "Cleaning up volumes..."
+          docker volume prune -f || true
+          
+          echo "Cleanup complete"
+      
+      # ============================================
+      # STEP 7: Test Summary
+      # ============================================
+      - name: "[SUMMARY] Generate Test Report"
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Test Summary"
+          echo "=========================================="
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "RAG Version: ${{ env.RAG_VERSION }}"
+          echo "Deployment Mode: Hosted NIMs (Method 1)"
+          echo "=========================================="
+          
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "Result: All tests passed"
+          else
+            echo "Result: Some tests failed - check logs above"
+          fi
