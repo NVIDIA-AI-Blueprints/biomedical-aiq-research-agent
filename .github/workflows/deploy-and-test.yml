@@ -20,7 +20,7 @@ jobs:
   # ============================================
   all-cloud:
     name: All Cloud Mode Test
-    runs-on: arc-runner-set-oke-org-poc-1-gpu
+    runs-on: arc-runner-set-oke-org-nv-ai-bp
     timeout-minutes: 60
     
     steps:
@@ -151,7 +151,7 @@ jobs:
   # ============================================
   local-ingestion:
     name: Local Ingestion Mode Test
-    runs-on: arc-runner-set-oke-org-poc-1-gpu
+    runs-on: arc-runner-set-oke-org-nv-ai-bp
     timeout-minutes: 60
     
     steps:
