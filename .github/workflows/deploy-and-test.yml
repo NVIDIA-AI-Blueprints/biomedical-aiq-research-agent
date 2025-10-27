@@ -2,7 +2,7 @@ name: Deploy and Test Biomedical AI-Q Research Agent
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, *-dev ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -16,7 +16,7 @@ env:
 jobs:
   deploy-and-test:
     name: Deploy and Test with Hosted NIMs
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-oke-org-poc-1-gpu
     timeout-minutes: 60
     
     steps:
