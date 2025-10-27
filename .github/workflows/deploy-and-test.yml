@@ -30,6 +30,29 @@ jobs:
       - name: "[DOCKER] Setup Buildx"
         uses: docker/setup-buildx-action@v3
       
+      - name: "[CACHE] Restore Docker Images"
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-images-all-cloud-${{ env.RAG_VERSION }}-${{ hashFiles('deploy/compose/docker-compose.yaml') }}
+          restore-keys: |
+            docker-images-all-cloud-${{ env.RAG_VERSION }}-
+            docker-images-all-cloud-
+      
+      - name: "[CACHE] Load Docker Images"
+        run: |
+          if [ -d "/tmp/docker-cache" ] && [ "$(ls -A /tmp/docker-cache)" ]; then
+            echo "Loading cached Docker images..."
+            for img in /tmp/docker-cache/*.tar; do
+              if [ -f "$img" ]; then
+                docker load -i "$img" || true
+              fi
+            done
+            echo "Cached images loaded"
+          else
+            echo "No cached images found"
+          fi
+      
       - name: "[AUTH] Login to NVIDIA Container Registry"
         run: |
           echo "${{ secrets.NGC_API_KEY }}" | docker login nvcr.io -u '$oauthtoken' --password-stdin
@@ -95,6 +118,18 @@ jobs:
             -H 'Content-Type: application/json' \
             -d '["test_all_cloud"]' || echo "Test execution attempted"
       
+      - name: "[CACHE] Save Docker Images"
+        if: always()
+        run: |
+          mkdir -p /tmp/docker-cache
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(nvcr.io|milvus|redis)" | while read img; do
+            filename=$(echo "$img" | tr '/:' '_')
+            if [ ! -f "/tmp/docker-cache/${filename}.tar" ]; then
+              docker save -o "/tmp/docker-cache/${filename}.tar" "$img" || true
+            fi
+          done
+          echo "Docker images saved to cache"
+      
       - name: "[CLEANUP] Stop Services"
         if: always()
         run: |
@@ -125,6 +160,29 @@ jobs:
       
       - name: "[DOCKER] Setup Buildx"
         uses: docker/setup-buildx-action@v3
+      
+      - name: "[CACHE] Restore Docker Images"
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-images-local-ingestion-${{ env.RAG_VERSION }}-${{ hashFiles('deploy/compose/docker-compose.yaml') }}
+          restore-keys: |
+            docker-images-local-ingestion-${{ env.RAG_VERSION }}-
+            docker-images-local-ingestion-
+      
+      - name: "[CACHE] Load Docker Images"
+        run: |
+          if [ -d "/tmp/docker-cache" ] && [ "$(ls -A /tmp/docker-cache)" ]; then
+            echo "Loading cached Docker images..."
+            for img in /tmp/docker-cache/*.tar; do
+              if [ -f "$img" ]; then
+                docker load -i "$img" || true
+              fi
+            done
+            echo "Cached images loaded"
+          else
+            echo "No cached images found"
+          fi
       
       - name: "[AUTH] Login to NVIDIA Container Registry"
         run: |
@@ -200,6 +258,18 @@ jobs:
           curl -X POST http://localhost:8051/v1/collections \
             -H 'Content-Type: application/json' \
             -d '["test_local_ingestion"]' || echo "Test execution attempted"
+      
+      - name: "[CACHE] Save Docker Images"
+        if: always()
+        run: |
+          mkdir -p /tmp/docker-cache
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(nvcr.io|milvus|redis)" | while read img; do
+            filename=$(echo "$img" | tr '/:' '_')
+            if [ ! -f "/tmp/docker-cache/${filename}.tar" ]; then
+              docker save -o "/tmp/docker-cache/${filename}.tar" "$img" || true
+            fi
+          done
+          echo "Docker images saved to cache"
       
       - name: "[CLEANUP] Stop Services"
         if: always()
