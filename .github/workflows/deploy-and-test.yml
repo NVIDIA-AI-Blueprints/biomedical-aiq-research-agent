@@ -95,14 +95,14 @@ jobs:
           curl -X POST http://localhost:8051/v1/collections \
             -H 'Content-Type: application/json' \
             -d '["test_all_cloud"]' || echo "Test execution attempted"
-      - name: "[CLEANUP] Stop Services"
-        if: always()
-        run: |
-          docker compose -f deploy/compose/docker-compose.yaml --profile aira down || true
-          docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down || true
-          docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down || true
-          docker compose -f rag/deploy/compose/vectordb.yaml down || true
-          docker volume prune -f || true
+      # - name: "[CLEANUP] Stop Services"
+      #   if: always()
+      #   run: |
+      #     docker compose -f deploy/compose/docker-compose.yaml --profile aira down || true
+      #     docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down || true
+      #     docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down || true
+      #     docker compose -f rag/deploy/compose/vectordb.yaml down || true
+      #     docker volume prune -f || true
       
       - name: "[OUTPUT] Save Test Result"
         if: always()
@@ -201,15 +201,15 @@ jobs:
           curl -X POST http://localhost:8051/v1/collections \
             -H 'Content-Type: application/json' \
             -d '["test_local_ingestion"]' || echo "Test execution attempted"
-      - name: "[CLEANUP] Stop Services"
-        if: always()
-        run: |
-          docker compose -f deploy/compose/docker-compose.yaml --profile aira down || true
-          docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down || true
-          docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down || true
-          docker compose -f rag/deploy/compose/vectordb.yaml down || true
-          docker compose -f rag/deploy/compose/nims.yaml down || true
-          docker volume prune -f || true
+      # - name: "[CLEANUP] Stop Services"
+      #   if: always()
+      #   run: |
+      #     docker compose -f deploy/compose/docker-compose.yaml --profile aira down || true
+      #     docker compose -f rag/deploy/compose/docker-compose-rag-server.yaml down || true
+      #     docker compose -f rag/deploy/compose/docker-compose-ingestor-server.yaml down || true
+      #     docker compose -f rag/deploy/compose/vectordb.yaml down || true
+      #     docker compose -f rag/deploy/compose/nims.yaml down || true
+      #     docker volume prune -f || true
       
       - name: "[OUTPUT] Save Test Result"
         if: always()
