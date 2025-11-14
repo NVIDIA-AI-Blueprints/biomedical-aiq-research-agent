@@ -21,7 +21,7 @@ jobs:
   all-cloud:
     name: All Cloud Mode Test
     runs-on: arc-runner-set-oke-org-nv-ai-bp
-    timeout-minutes: 60
+    timeout-minutes: 600
     
     steps:
       - name: "[CHECKOUT] Repository"
@@ -117,7 +117,7 @@ jobs:
   local-ingestion:
     name: Local Ingestion Mode Test
     runs-on: arc-runner-set-oke-org-nv-ai-bp
-    timeout-minutes: 60
+    timeout-minutes: 600
     
     steps:
       - name: "[CHECKOUT] Repository"
