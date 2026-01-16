@@ -292,3 +292,15 @@ jobs:
             exit 1
           fi
       
+  scan:
+    # needs: preflight
+    if: always()
+    uses: NVIDIA-AI-Blueprints/nim-docker-scanner/.github/workflows/scan.yml@main
+    with:
+      # exclude-dirs: 'external'
+      resolve-latest: true
+      scan-docker-images: true
+      scan-hosted-nim: true
+    secrets:
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      NVCF_CONFIG_ON_GITHUB_TOKEN: ${{ secrets.NVCF_CONFIG_ON_GITHUB_TOKEN }}
