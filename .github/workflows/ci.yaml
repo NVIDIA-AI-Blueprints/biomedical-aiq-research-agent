@@ -27,6 +27,7 @@ env:
   TEST_IMAGE: nvcr.io/rw983xdqtcdp/auto_test_team/blueprint-github-test-image:latest
   QA_TESTER_REPO: https://github.com/bp-cicd-org/qa-tester.git
   RAG_VERSION: v2.2.1
+  ENABLE_EMAIL_NOTIFICATION: false  # Set to false to disable email notifications
 
 jobs:
   # ============================================
@@ -459,7 +460,7 @@ jobs:
 
       - name: Send Email Notification
         uses: dawidd6/action-send-mail@6e71c855c9a091d80a519621b9fd3e8d252ca40c
-        if: always()
+        if: always() && env.ENABLE_EMAIL_NOTIFICATION == 'true'
         with:
           server_address: smtp.gmail.com
           server_port: 587
