@@ -328,7 +328,6 @@ jobs:
       # ==========================================
       - name: Run Tests - Notebook and UI
         id: pytest
-        continue-on-error: true
         run: |
           echo "========================================"
           echo "  RUNNING PYTEST: biomedical_aiq (notebook + ui)"
@@ -365,8 +364,7 @@ jobs:
               --api-url="$BACKEND_URL" \
               --disable-warnings \
               --self-contained-html \
-              --html=/app/reports/${REPORT_FILE} \
-            || echo "pytest_exit_code=$?" >> $GITHUB_OUTPUT
+              --html=/app/reports/${REPORT_FILE}
           
           echo ""
           echo "Test report saved to: test_reports/${REPORT_FILE}"
