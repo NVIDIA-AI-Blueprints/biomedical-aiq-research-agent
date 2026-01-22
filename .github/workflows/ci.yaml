@@ -12,6 +12,15 @@
 # pytest markers:
 #   - biomedical_aiq and (notebook or ui)
 #
+# -----------------------------------------------------------------------------
+# Notebook → HTML Mapping (for pytest)
+# -----------------------------------------------------------------------------
+# The pytest test cases expect specific HTML filename in /app/input/
+#
+# | Notebook                                | Expected HTML filename                     |
+# |-----------------------------------------|--------------------------------------------|
+# | notebooks/get_started_nvidia_api.ipynb  | biomedical_get_started_nvidia_api.html     |
+#
 # =============================================================================
 
 name: Biomedical AI-Q Research Agent CI
