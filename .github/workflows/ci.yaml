@@ -378,7 +378,7 @@ jobs:
   pytest:
     name: Run Tests
     needs: [preflight, biomedical-aiq]
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.biomedical-aiq.result == 'success' || needs.biomedical-aiq.result == 'skipped') }}
+    if: ${{ always() && needs.preflight.result == 'success' }}
     runs-on: ubuntu-latest
     
     steps:
