@@ -277,6 +277,11 @@ jobs:
           echo "  EXECUTING NOTEBOOK: get_started_nvidia_api"
           echo "========================================"
           
+          # Export environment variables for notebook execution
+          export NVIDIA_API_KEY="${NVIDIA_API_KEY}"
+          export NGC_API_KEY="${NGC_API_KEY}"
+          export TAVILY_API_KEY="${TAVILY_API_KEY}"
+          
           COMMIT_SHA=$(git rev-parse --short=7 HEAD)
           
           python notebook_runner_nbclient.py \
