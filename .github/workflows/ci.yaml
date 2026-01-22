@@ -31,11 +31,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      skip_notebook:
-        description: 'Skip notebook execution, reuse last HTML artifacts (only notebook tests will run, UI tests skipped)'
-        type: boolean
-        default: false
 
 env:
   TEST_IMAGE: nvcr.io/rw983xdqtcdp/auto_test_team/blueprint-github-test-image:latest
@@ -168,12 +163,12 @@ jobs:
           echo "========================================"
 
   # ============================================
-  # BIOMEDICAL AI-Q: Notebook Deploy (skip if skip_notebook=true)
+  # BIOMEDICAL AI-Q: Deploy & Test
   # ============================================
   biomedical-aiq:
-    name: Biomedical AI-Q - Deploy
+    name: Biomedical AI-Q - Deploy & Test
     needs: preflight
-    if: ${{ needs.preflight.outputs.preflight_passed == 'true' && (github.event_name != 'workflow_dispatch' || !inputs.skip_notebook) }}
+    if: ${{ needs.preflight.outputs.preflight_passed == 'true' }}
     runs-on: arc-runner-set-oke-org-poc-4-gpu
     # runs-on: arc-runners-org-nvidia-ai-bp-4-gpu
     timeout-minutes: 240
@@ -343,7 +338,7 @@ jobs:
           docker ps -a --format "table {{.Names}}\t{{.Status}}"
 
       # ==========================================
-      # PHASE 5: Prepare and Upload HTML for pytest
+      # PHASE 5: Prepare HTML and Run pytest
       # ==========================================
       - name: Prepare HTML for pytest
         run: |
@@ -357,6 +352,42 @@ jobs:
           fi
           
           ls -la notebook_output/
+
+      - name: Run Tests
+        id: pytest
+        run: |
+          echo "========================================"
+          echo "  RUNNING PYTEST: biomedical_aiq (notebook + ui)"
+          echo "========================================"
+          
+          COMMIT_SHA=$(git rev-parse --short=7 HEAD)
+          REPORT_FILE="biomedical_aiq_${COMMIT_SHA}_test_report.html"
+          
+          mkdir -p test_reports
+          
+          # Run pytest with test image (services are running on this same runner)
+          docker run --rm \
+            --network host \
+            -v "$(pwd)/notebook_output:/app/input" \
+            -v "$(pwd)/test_reports:/app/reports" \
+            ${{ env.TEST_IMAGE }} \
+            pytest -m "biomedical_aiq and (notebook or ui)" \
+              --playground-url="http://localhost:3001" \
+              --api-url="http://localhost:8051" \
+              --disable-warnings \
+              --self-contained-html \
+              --html=/app/reports/${REPORT_FILE}
+          
+          echo ""
+          echo "Test report saved to: test_reports/${REPORT_FILE}"
+
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: biomedical-aiq-test-report
+          path: test_reports/
+          retention-days: 30
 
       - name: Upload Notebook HTML
         uses: actions/upload-artifact@v4
@@ -378,127 +409,11 @@ jobs:
           echo "✓ Cleanup completed"
 
   # ============================================
-  # PYTEST: Run tests (can run independently with skip_notebook=true)
-  # ============================================
-  pytest:
-    name: Run Tests
-    needs: [preflight, biomedical-aiq]
-    if: ${{ always() && needs.preflight.result == 'success' }}
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Docker Login to NGC
-        env:
-          NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
-        run: |
-          echo "${NGC_API_KEY}" | docker login nvcr.io -u '$oauthtoken' --password-stdin
-          echo "✓ NGC Docker login successful"
-
-      - name: Pull Test Image
-        run: |
-          echo "Pulling test image: ${{ env.TEST_IMAGE }}"
-          docker pull ${{ env.TEST_IMAGE }}
-          echo "✓ Test image pulled successfully"
-
-      # Try to download artifacts from current workflow run
-      - name: Download Current Run Artifacts
-        id: download_current
-        uses: actions/download-artifact@v4
-        with:
-          name: biomedical-aiq-notebook-html
-          path: notebook_output
-        continue-on-error: true
-
-      # If skip_notebook=true and no current artifacts, download from previous runs
-      - name: Download Previous Run Artifacts
-        if: ${{ steps.download_current.outcome == 'failure' }}
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          workflow: ci.yaml
-          branch: ${{ github.ref_name }}
-          name: biomedical-aiq-notebook-html
-          path: notebook_output
-          search_artifacts: true
-          if_no_artifact_found: fail
-
-      - name: Prepare HTML Files
-        run: |
-          echo "========================================"
-          echo "  PREPARING HTML FILES FOR PYTEST"
-          echo "========================================"
-          
-          ls -la notebook_output/ || echo "No notebook_output directory"
-          
-          # Ensure biomedical_get_started_nvidia_api.html exists
-          if [ ! -f "notebook_output/biomedical_get_started_nvidia_api.html" ]; then
-            NOTEBOOK_HTML=$(ls notebook_output/*.html 2>/dev/null | head -1)
-            if [ -n "$NOTEBOOK_HTML" ]; then
-              cp "$NOTEBOOK_HTML" notebook_output/biomedical_get_started_nvidia_api.html
-              echo "✓ Created biomedical_get_started_nvidia_api.html from $NOTEBOOK_HTML"
-            fi
-          fi
-          
-          echo "Files ready for pytest:"
-          ls -la notebook_output/
-
-      - name: Run Tests
-        id: pytest
-        run: |
-          echo "========================================"
-          echo "  RUNNING PYTEST: biomedical_aiq"
-          echo "========================================"
-          
-          COMMIT_SHA=$(git rev-parse --short=7 HEAD)
-          REPORT_FILE="biomedical_aiq_${COMMIT_SHA}_test_report.html"
-          
-          mkdir -p test_reports
-          
-          # Determine which tests to run based on whether services are available
-          # If skip_notebook=true, services are not running, so only run notebook tests
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.skip_notebook }}" == "true" ]; then
-            PYTEST_MARKERS="biomedical_aiq and notebook"
-            echo "Running notebook tests only (skip_notebook=true, no services)"
-          else
-            PYTEST_MARKERS="biomedical_aiq and (notebook or ui)"
-            echo "Running all tests (notebook + UI)"
-          fi
-          
-          echo "pytest markers: $PYTEST_MARKERS"
-          echo ""
-          
-          # Run pytest with test image
-          docker run --rm \
-            --network host \
-            -v "$(pwd)/notebook_output:/app/input" \
-            -v "$(pwd)/test_reports:/app/reports" \
-            ${{ env.TEST_IMAGE }} \
-            pytest -m "$PYTEST_MARKERS" \
-              --playground-url="http://localhost:3001" \
-              --api-url="http://localhost:8051" \
-              --disable-warnings \
-              --self-contained-html \
-              --html=/app/reports/${REPORT_FILE}
-          
-          echo ""
-          echo "Test report saved to: test_reports/${REPORT_FILE}"
-
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: biomedical-aiq-test-report
-          path: test_reports/
-          retention-days: 30
-
-  # ============================================
   # SUMMARY: Generate final report
   # ============================================
   summary:
     name: Generate Summary
-    needs: [preflight, biomedical-aiq, pytest]
+    needs: [preflight, biomedical-aiq]
     if: always()
     runs-on: ubuntu-latest
     
@@ -521,8 +436,7 @@ jobs:
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Preflight | ${{ needs.preflight.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Deploy | ${{ needs.biomedical-aiq.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Pytest | ${{ needs.pytest.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy & Test | ${{ needs.biomedical-aiq.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Test Configuration" >> $GITHUB_STEP_SUMMARY
@@ -548,11 +462,9 @@ jobs:
         id: set_result
         if: always()
         run: |
-          # Check if all required jobs passed (skipped is OK for deploy when skip_notebook=true)
-          DEPLOY_OK="${{ needs.biomedical-aiq.result == 'success' || needs.biomedical-aiq.result == 'skipped' }}"
+          # Check if all required jobs passed
           if [ "${{ needs.preflight.result }}" == "success" ] && \
-             [ "$DEPLOY_OK" == "true" ] && \
-             [ "${{ needs.pytest.result }}" == "success" ]; then
+             [ "${{ needs.biomedical-aiq.result }}" == "success" ]; then
             echo "RESULT=PASS" >> $GITHUB_OUTPUT
           else
             echo "RESULT=FAIL" >> $GITHUB_OUTPUT
@@ -581,8 +493,7 @@ jobs:
             <table border="1" cellpadding="5" cellspacing="0">
               <tr><th>Job</th><th>Status</th></tr>
               <tr><td>Preflight</td><td>${{ needs.preflight.result }}</td></tr>
-              <tr><td>Deploy</td><td>${{ needs.biomedical-aiq.result }}</td></tr>
-              <tr><td>Pytest</td><td>${{ needs.pytest.result }}</td></tr>
+              <tr><td>Deploy & Test</td><td>${{ needs.biomedical-aiq.result }}</td></tr>
             </table>
             
             <p><a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Workflow Run</a></p>
