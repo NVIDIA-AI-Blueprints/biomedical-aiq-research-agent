@@ -169,8 +169,8 @@ jobs:
     name: Biomedical AI-Q - Deploy & Test
     needs: preflight
     if: ${{ needs.preflight.outputs.preflight_passed == 'true' }}
-    runs-on: arc-runner-set-oke-org-poc-4-gpu
-    # runs-on: arc-runners-org-nvidia-ai-bp-4-gpu
+    # runs-on: arc-runner-set-oke-org-poc-4-gpu
+    runs-on: arc-runners-org-nvidia-ai-bp-4-gpu
     timeout-minutes: 240
     
     steps:
