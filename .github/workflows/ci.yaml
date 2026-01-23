@@ -279,12 +279,14 @@ jobs:
           
           COMMIT_SHA=$(git rev-parse --short=7 HEAD)
           
+          # Skip cell 3: Contains hardcoded placeholder that overrides NGC_API_KEY/NVIDIA_API_KEY
           python notebook_runner_nbclient.py \
             -f notebooks/get_started_nvidia_api.ipynb \
             --output-dir notebook_output \
             --timeout 3600 \
             --skip-deps-check \
             --skip-tags ci-skip \
+            --skip-cells 3 \
             -e NGC_API_KEY="${NGC_API_KEY}" \
             -e NVIDIA_API_KEY="${NVIDIA_API_KEY}" \
             -e TAVILY_API_KEY="${TAVILY_API_KEY}"
