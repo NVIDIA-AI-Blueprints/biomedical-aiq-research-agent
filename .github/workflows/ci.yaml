@@ -336,6 +336,44 @@ jobs:
           echo ""
           echo "Docker containers status:"
           docker ps -a --format "table {{.Names}}\t{{.Status}}"
+          
+          # Debug: Check for failed containers and show their logs
+          echo ""
+          echo "========================================"
+          echo "  DEBUG: Checking for failed containers"
+          echo "========================================"
+          
+          FAILED_CONTAINERS=$(docker ps -a --filter "status=exited" --format "{{.Names}}")
+          if [ -n "$FAILED_CONTAINERS" ]; then
+            echo "⚠ Found exited containers:"
+            for container in $FAILED_CONTAINERS; do
+              echo ""
+              echo "----------------------------------------"
+              echo "Container: $container"
+              echo "----------------------------------------"
+              echo "Exit code: $(docker inspect $container --format='{{.State.ExitCode}}')"
+              echo "Error: $(docker inspect $container --format='{{.State.Error}}')"
+              echo ""
+              echo "Last 50 lines of logs:"
+              docker logs --tail 50 $container 2>&1 || echo "Failed to get logs"
+              echo "----------------------------------------"
+            done
+          else
+            echo "✓ No failed containers found"
+          fi
+          
+          # Debug: Check unhealthy containers
+          UNHEALTHY_CONTAINERS=$(docker ps -a --filter "health=unhealthy" --format "{{.Names}}")
+          if [ -n "$UNHEALTHY_CONTAINERS" ]; then
+            echo ""
+            echo "⚠ Found unhealthy containers:"
+            for container in $UNHEALTHY_CONTAINERS; do
+              echo ""
+              echo "Container: $container"
+              echo "Health status: $(docker inspect $container --format='{{.State.Health.Status}}')"
+              echo "Last health check: $(docker inspect $container --format='{{range .State.Health.Log}}{{.Output}}{{end}}' | tail -5)"
+            done
+          fi
 
       # ==========================================
       # PHASE 5: Prepare HTML and Run pytest
