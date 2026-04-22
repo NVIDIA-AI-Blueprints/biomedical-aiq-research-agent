@@ -251,8 +251,8 @@ jobs:
           
           # Hosted NIM endpoints
           echo "APP_LLM_MODELNAME=nvidia/llama-3.3-nemotron-super-49b-v1" >> $GITHUB_ENV
-          echo "APP_EMBEDDINGS_MODELNAME=nvidia/llama-3.2-nv-embedqa-1b-v2" >> $GITHUB_ENV
-          echo "APP_RANKING_MODELNAME=nvidia/llama-3.2-nv-rerankqa-1b-v2" >> $GITHUB_ENV
+          echo "APP_EMBEDDINGS_MODELNAME=nvidia/llama-nemotron-embed-1b-v2" >> $GITHUB_ENV
+          echo "APP_RANKING_MODELNAME=nvidia/llama-nemotron-rerank-1b-v2" >> $GITHUB_ENV
           echo "AIRA_HOSTED_NIMS=true" >> $GITHUB_ENV
           echo "MOLMIM_ENDPOINT_URL=https://health.api.nvidia.com/v1/biology/nvidia/molmim/generate" >> $GITHUB_ENV
           echo "DIFFDOCK_ENDPOINT_URL=https://health.api.nvidia.com/v1/biology/mit/diffdock" >> $GITHUB_ENV
