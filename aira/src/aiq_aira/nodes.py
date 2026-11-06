@@ -424,16 +424,19 @@ def format_sources(sources: str) -> str:
 async def check_virtual_screening_intended(llm, writer, report_organization: str, topic : str) -> bool:
     """
     Check the report_organization to determine if virtual screening is intended to happen.
-    Returns True or False.
+    Returns True or False. If the model reply cannot be parsed (e.g. plain text instead of the
+    requested JSON), log a warning and fall back to False (virtual screening not intended), so that
+    report generation continues instead of failing.
     """
     
     response = await llm.ainvoke(check_whether_virtual_screening.format(report_organization=report_organization, topic = topic))
-    intention = parse_json_markdown(response.content)
-    writer({"check_virtual_screening_intended": "Intention of virtual screening: " + intention["intention"].lower()})
-    if intention["intention"].lower() == "yes":
-        return True
-    else:
-        return False
+    try:
+        intention = parse_json_markdown(response.content)["intention"].lower()
+    except Exception as e:
+        logger.warning(f"Error parsing virtual screening intention as JSON, assuming virtual screening is not intended: {e}")
+        intention = "no"
+    writer({"check_virtual_screening_intended": "Intention of virtual screening: " + intention})
+    return intention == "yes"
     
 
 async def find_protein_and_molecule( llm, topic, writer, config, collection, search_web, num_iterations = 3):
