@@ -421,19 +421,44 @@ def format_sources(sources: str) -> str:
     
 # The following nodes are biomed aira nodes
 
+def _intention_from_plain_text(content) -> str | None:
+    """
+    Fallback for a model reply that is not the requested JSON: return "yes" or "no" only when the
+    reply clearly starts with that word (ignoring case, whitespace, markdown and quotes), e.g.
+    "Yes, virtual screening is intended ...". Anything else returns None.
+    """
+    if not isinstance(content, str):
+        return None
+    match = re.match(r"(yes|no)\b", content.lstrip(" \t\r\n*_#>`\"'“”‘’"), re.IGNORECASE)
+    return match.group(1).lower() if match else None
+
+
 async def check_virtual_screening_intended(llm, writer, report_organization: str, topic : str) -> bool:
     """
     Check the report_organization to determine if virtual screening is intended to happen.
-    Returns True or False.
+    Returns True or False. If the model reply cannot be parsed as the requested JSON, log a warning
+    and fall back to the reply text: a reply that clearly starts with "yes" or "no" is taken as
+    that answer, anything else as "no" (virtual screening not intended), so that report
+    generation continues instead of failing.
     """
     
     response = await llm.ainvoke(check_whether_virtual_screening.format(report_organization=report_organization, topic = topic))
-    intention = parse_json_markdown(response.content)
-    writer({"check_virtual_screening_intended": "Intention of virtual screening: " + intention["intention"].lower()})
-    if intention["intention"].lower() == "yes":
-        return True
-    else:
-        return False
+    content = response.content
+    try:
+        intention = parse_json_markdown(content)["intention"].lower()
+        message = "Intention of virtual screening: " + intention
+    except Exception as e:
+        intention = _intention_from_plain_text(content)
+        if intention is None:
+            intention = "no"
+            assumption = "assumed 'no' (virtual screening not intended)"
+        else:
+            assumption = f"assumed '{intention}' because the reply starts with '{intention}'"
+        reply = repr(content[:200]) if isinstance(content, str) else repr(content)[:200]
+        logger.warning(f"Error parsing virtual screening intention as JSON ({e}); {assumption}. Reply (first 200 chars): {reply}")
+        message = f"Intention of virtual screening: {intention} (the model reply could not be parsed; {assumption})"
+    writer({"check_virtual_screening_intended": message})
+    return intention == "yes"
     
 
 async def find_protein_and_molecule( llm, topic, writer, config, collection, search_web, num_iterations = 3):
